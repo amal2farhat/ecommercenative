@@ -1,0 +1,211 @@
+
+
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator, Image, Dimensions } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '@/assets/constants';
+import { Product } from '@/assets/constants/types';
+import { useCart } from '../../../context/cartContext';
+import { useWishlist } from '../../../context/washlistContext';
+import { dummyProducts } from '@/assets/assets';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native-gesture-handler';
+import Toast from 'react-native-toast-message';
+
+const {width}=Dimensions.get('window')
+export default function ProductDetails() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const [product,setProduct]=useState<Product | null>(null)
+  const [loading,setLoading]=useState(true)
+  const {addToCart,cartItems,itemCount}=useCart()
+  const {toggleWishlist,isInWishlist}=useWishlist()
+  const [selectedSize,setSelectedSize]=useState<string | null>(null)
+  const [activeImageIndex,setActiveImageIndex]=useState(0)
+  
+  
+
+  const fetchProduct=async()=>{
+    // setProduct(dummyProducts.find((product)=>product._id ==id )as any);
+    const found:any=dummyProducts.find((product)=>product._id ===id);
+    setProduct(found ?? null);
+    setLoading(false)
+  }
+  useEffect(()=>{
+     fetchProduct()
+  },[id])
+
+  if(loading){
+    return (
+      <SafeAreaView className='flex-1 justify-center items-center'>
+        <ActivityIndicator size='large' color={COLORS.primary} />
+      </SafeAreaView>
+    )
+  }
+  if(!product){
+    return (
+      <SafeAreaView className='flex-1 justify-center items-center'>
+        <Text>Product not found</Text>
+      </SafeAreaView>
+    )
+  }
+
+  const isLiked=isInWishlist(product._id)
+
+  const handleAddToCart=()=>{
+    if(!selectedSize){
+      Toast.show({
+        type:'info',
+        text1:'No size selected',
+        text2:'Please select a size'
+      })
+      return;}
+    addToCart(product,selectedSize || '')
+  }
+
+  return (
+    <View className='flex-1 bg-white'>
+     
+<ScrollView contentContainerStyle={{paddingBottom:100}}>
+
+  <View className='relative h-[450px] bg-gray-100 mb-6'>
+    
+    {/* <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} 
+    scrollEventThrottle={16} onScroll={(e)=>{
+
+    }}> */}
+         <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={{ height: 192 }} 
+              onScroll={(event)=>{
+                const slide = Math.ceil(
+          event.nativeEvent.contentOffset.x /event.nativeEvent.layoutMeasurement.width
+        );
+        setActiveImageIndex(slide);
+       
+       
+              }}
+            >
+
+      {product.images?.map((img,index)=>(
+          <Image
+                        source={{ uri: img }} key={index}
+                        style={{ width: width, height: 450 }}
+                        resizeMode="cover"
+                      />
+   
+      ))}
+{/* methode (2) */}
+   {/* <Image
+      source={{ uri: product.images?.[0] }}
+      style={{ width: width, height: 450 }}
+      resizeMode="cover"
+    /> */}
+    </ScrollView>
+{/* header   */}
+<View className='absolute top-12 left-4 right-4 flex-row justify-between items-center z-10'>
+ <TouchableOpacity className='w-10 h-10 bg-white/80 rounded-full items-center justify-center'
+  // style={{paddingTop:50}}
+  onPress={() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/'); // غيّرها لمسار الصفحة الرئيسية عندك
+    }
+  }}
+
+>
+  <Ionicons
+          name="arrow-back"
+          size={24}
+          color={COLORS.primary}
+        />
+
+</TouchableOpacity>
+
+ <TouchableOpacity className='w-10 h-10 bg-white/80 rounded-full items-center justify-center'
+  // style={{paddingTop:50}}
+  onPress={() => toggleWishlist(product)
+  
+  }
+
+>
+ <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={24}
+// color={isLiked ? COLORS.accent : COLORS.primary} 
+color={isLiked ? COLORS.accent : COLORS.banafsajiAmal} 
+                  />
+
+</TouchableOpacity>
+</View>
+
+{/* pagination */}
+<View className='absolute bottom-4 left-0 right-0 flex-row justify-center gap-2'>
+  {product.images?.map((_,index)=>(
+    <View key={index} className={`h-2 rounded-full ${index === activeImageIndex ? 'w-6 bg-primary' : 'w-2 bg-gray-300'}`}>
+
+    </View>
+  ))}
+</View>
+  </View>
+
+  {/* product info */}
+   <View className='px-5'>
+    {/* title and raitings */}
+<View className='flex-row justify-between items-start mb-2'>
+  <Text className='text-2xl font-bold text-primary flex-1 mr-4'>{product.name}</Text>
+  <View className='flex-row justify-between items-start mb-2'>
+    <Ionicons name='star' size={14} color='#FFD700'  />
+    <Text className='text-sm font-bold ml-1'>4.6</Text>
+      <Text className='text-xs text-secondary ml-1'>(85)</Text>
+  </View>
+</View>
+<Text className='text-2xl font-bold text-primary'>
+  ${product.price.toFixed(2)}
+</Text>
+{product.sizes && product.sizes.length > 0 && (
+  <>
+  <Text className='text-base font-bold text-primary mb-3'>
+    Size
+  </Text>
+  <View className='flex-row gap-3 mb-6 flex-wrap'>
+    {product.sizes.map((size)=>(
+      <TouchableOpacity key={size} onPress={()=>setSelectedSize(size)} className={`w-12 h-12 rounded-full items-center
+        justify-center border 
+      ${selectedSize === size ? 'bg-primary border-primary' : 'bg-white border-gray-100'}`}>
+        <Text className={`text-sm font-medium ${selectedSize === size ? 'text-white' : 'text-primary'}`}>{size}</Text>
+
+      </TouchableOpacity>
+    ))}
+  </View>
+  </>
+)}
+{/* description */}
+<Text className='text-base font-bold text-primary mb-2'>Description</Text>
+<Text className='text-secondary leading-6 mb-6'>{product.description}</Text>
+   </View>
+</ScrollView>
+
+{/* footer */}
+    <View className='absolute bottom-4 left-0 flex-row right-0 p-4 border-t border-gray-100'>
+      <TouchableOpacity className='w-4/5 bg-primary py-4 rounded-full items-center justify-center shadow-lg flex-row'>
+        <Ionicons name='bag-outline' size={20} color='white'/>
+        <Text className='text-white font-bold text-base ml-2'>Add To Cart</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity className='w-1/5 py-3  justify-center relative flex-row'
+      onPress={()=>router.push('/(tabs)/cart')}>
+        <Ionicons name='cart-outline' size={24} color='black'/>
+       <View className='absolute top-2 right-4 size-4 z-10 bg-black rounded-full items-center justify-center'>
+         <Text className='text-white text-[9px]'>{itemCount}</Text>
+    
+       </View>
+         </TouchableOpacity>
+    </View>
+    </View>
+  );
+}
+
+
