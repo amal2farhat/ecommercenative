@@ -1,12 +1,27 @@
-import { View, Text } from "react-native";
+import { Redirect } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 
 export default function Index() {
+  const { isSignedIn } = useAuth();
+
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>APP WORKS</Text>
-    </View>
+    <Redirect href={isSignedIn ? '/(tabs)' : '/(auth)/signin'} />
   );
 }
+
+// import { View, Text } from "react-native";
+// import HomeScreen from "./(tabs)";
+// import { Redirect } from "expo-router";
+
+// export default function Index() {
+//   //  return <Redirect href="/(auth)/signin" />;
+//   return (
+//     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+//       {/* <HomeScreen /> */}
+//       {/* <Text>APP WORKS</Text> */}
+//     </View>
+//   );
+// }
 
 // import { View, Text, StyleSheet } from "react-native";
 // import { Redirect } from "expo-router";

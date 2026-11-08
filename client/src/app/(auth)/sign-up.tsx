@@ -208,6 +208,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Platform,
+  KeyboardAvoidingView,
   View,
   ActivityIndicator,
 } from "react-native";
@@ -221,6 +223,7 @@ import { COLORS } from "@/assets/constants";
 
 export default function SignUpScreen() {
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     isLoaded: signUpLoaded,
@@ -237,58 +240,189 @@ export default function SignUpScreen() {
   const [code, setCode] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
+  //3
+  
+const onSignUpPress = async () => {
+  if (!signUpLoaded || loading) return;
 
-  const onSignUpPress = async () => {
-    if (!signUpLoaded || loading) return;
+  if (
+    !emailAddress.trim() ||
+    !password ||
+    !firstName.trim() ||
+    !lastName.trim()
+  ) {
+    Toast.show({
+      type: "error",
+      text1: "حقول ناقصة",
+      text2: "الرجاء تعبئة جميع الحقول",
+    });
+    return;
+  }
 
-    if (
-      !emailAddress.trim() ||
-      !password ||
-      !firstName.trim() ||
-      !lastName.trim()
-    ) {
+  setLoading(true);
+
+  try {
+    console.log("Password length:", password.length);
+
+    await signUp.create({
+      emailAddress: emailAddress.trim(),
+      password: password,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+    });
+
+    await signUp.prepareEmailAddressVerification({
+      strategy: "email_code",
+    });
+
+    setPendingVerification(true);
+
+    Toast.show({
+      type: "success",
+      text1: "تم إرسال رمز التحقق",
+      text2: "تحقق من بريدك الإلكتروني",
+    });
+
+  } catch (err: any) {
+    const clerkError = err?.errors?.[0];
+
+    if (clerkError?.code === "form_password_pwned") {
       Toast.show({
         type: "error",
-        text1: "Missing Fields",
-        text2: "Please fill in all fields",
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await signUp.create({
-        emailAddress: emailAddress.trim(),
-        password,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-      });
-
-      await signUp.prepareEmailAddressVerification({
-        strategy: "email_code",
-      });
-
-      setPendingVerification(true);
-
-      Toast.show({
-        type: "success",
-        text1: "Verification code sent",
-        text2: "Check your email for the code",
-      });
-    } catch (err: any) {
-      Toast.show({
-        type: "error",
-        text1: "Failed to Sign Up",
+        text1: "كلمة المرور غير آمنة",
         text2:
-          err?.errors?.[0]?.message ??
-          err?.message ??
-          "Something went wrong",
+          "جرّب كلمة مرور مختلفة تماماً وغير مستخدمة سابقاً.",
       });
-    } finally {
-      setLoading(false);
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "فشل إنشاء الحساب",
+        text2:
+          clerkError?.message ||
+          err?.message ||
+          "حدث خطأ، حاول مرة أخرى",
+      });
     }
-  };
+
+    console.log("Clerk error code:", clerkError?.code);
+
+  } finally {
+    setLoading(false);
+  }
+};
+
+//2
+// const onSignUpPress = async () => {
+//   if (!signUpLoaded || loading) return;
+
+//   if (
+//     !emailAddress.trim() ||
+//     !password ||
+//     !firstName.trim() ||
+//     !lastName.trim()
+//   ) {
+//     Toast.show({
+//       type: "error",
+//       text1: "حقول ناقصة",
+//       text2: "الرجاء تعبئة جميع الحقول",
+//     });
+//     return;
+//   }
+
+//   setLoading(true);
+
+//   try {
+//     await signUp.create({
+//       emailAddress: emailAddress.trim(),
+//       password,
+//       firstName: firstName.trim(),
+//       lastName: lastName.trim(),
+//     });
+
+//     await signUp.prepareEmailAddressVerification({
+//       strategy: "email_code",
+//     });
+
+//     setPendingVerification(true);
+
+//     Toast.show({
+//       type: "success",
+//       text1: "تم إرسال رمز التحقق",
+//       text2: "تحقق من بريدك الإلكتروني",
+//     });
+
+//   } 
+ 
+// catch (err: any) {
+//   console.log("CLERK SIGNUP ERROR:", JSON.stringify(err, null, 2));
+
+//   const clerkError = err?.errors?.[0];
+
+//   Toast.show({
+//     type: "error",
+//     text1: "Signup Error",
+//     text2:
+//       clerkError?.message ||
+//       err?.message ||
+//       "Something went wrong",
+//   });
+// } finally {
+//   setLoading(false);
+// }
+
+// };
+//1
+  // const onSignUpPress = async () => {
+  //   if (!signUpLoaded || loading) return;
+
+  //   if (
+  //     !emailAddress.trim() ||
+  //     !password ||
+  //     !firstName.trim() ||
+  //     !lastName.trim()
+  //   ) {
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Missing Fields",
+  //       text2: "Please fill in all fields",
+  //     });
+  //     return;
+  //   }
+
+  //   setLoading(true);
+
+  //   try {
+  //     await signUp.create({
+  //       emailAddress: emailAddress.trim(),
+  //       password,
+  //       firstName: firstName.trim(),
+  //       lastName: lastName.trim(),
+  //     });
+
+  //     await signUp.prepareEmailAddressVerification({
+  //       strategy: "email_code",
+  //     });
+
+  //     setPendingVerification(true);
+
+  //     Toast.show({
+  //       type: "success",
+  //       text1: "Verification code sent",
+  //       text2: "Check your email for the code",
+  //     });
+  //   } catch (err: any) {
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Failed to Sign Up",
+  //       text2:
+  //         err?.errors?.[0]?.message ??
+  //         err?.message ??
+  //         "Something went wrong",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const onVerifyPress = async () => {
     if (!signUpLoaded || loading) return;
@@ -363,6 +497,11 @@ export default function SignUpScreen() {
       className="flex-1 bg-white justify-center"
       style={{ padding: 28 }}
     >
+      <KeyboardAvoidingView
+      className="flex-1"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
       {!pendingVerification ? (
         <>
           <TouchableOpacity
@@ -428,8 +567,35 @@ export default function SignUpScreen() {
               onChangeText={setEmailAddress}
             />
           </View>
+<View className="mb-6">
+  <Text className="text-primary font-medium mb-2">
+    Password
+  </Text>
 
-          <View className="mb-6">
+  <View className="flex-row items-center w-full bg-surface rounded-xl px-4">
+    <TextInput
+      className="flex-1 py-4 text-primary"
+      placeholder="********"
+      placeholderTextColor="#999"
+      secureTextEntry={!showPassword}
+      value={password}
+      onChangeText={setPassword}
+      autoCapitalize="none"
+      autoCorrect={false}
+    />
+
+    <TouchableOpacity
+      onPress={() => setShowPassword(!showPassword)}
+    >
+      <Ionicons
+        name={showPassword ? "eye-off-outline" : "eye-outline"}
+        size={22}
+        color={COLORS.secondary}
+      />
+    </TouchableOpacity>
+  </View>
+</View>
+          {/* <View className="mb-6">
             <Text className="text-primary font-medium mb-2">
               Password
             </Text>
@@ -441,7 +607,7 @@ export default function SignUpScreen() {
               value={password}
               onChangeText={setPassword}
             />
-          </View>
+          </View> */}
 
           <TouchableOpacity
             className="w-full bg-primary py-4 rounded-full items-center mb-10"
@@ -517,6 +683,7 @@ export default function SignUpScreen() {
           </TouchableOpacity>
         </>
       )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
