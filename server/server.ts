@@ -4,11 +4,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import { clerkMiddleware } from '@clerk/express'
+import { clerkWebhooks } from './controllers/webhooks.js';
 
 dotenv.config();
 
 const app = express();
 await connectDB()
+app.post('/api/clerk',express.raw({type:"application/json"}),clerkWebhooks)
 //mongodb+srv://amalfarah222_db_user:RA2RsM8xboRaLGM4@cluster0.6ezgplo.mongodb.net/
 // CORS - Allow React Native Web
 app.use(cors({
