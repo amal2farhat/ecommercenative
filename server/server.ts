@@ -5,6 +5,9 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import { clerkMiddleware } from '@clerk/express'
 import { clerkWebhooks } from './controllers/webhooks.js';
+import makeAdmin from './scripts/makeAdmin.js';
+import ProductRouter from './routes/productRoutes.js'
+import CartRouter from './routes/cartRoutes.js';
 
 dotenv.config();
 
@@ -25,7 +28,9 @@ app.use(clerkMiddleware());
 app.get('/', (req, res) => {
   res.status(200).send('API Server is running!');
 });
-
+app.use("/api/products",ProductRouter)
+app.use("/api/cart",CartRouter)
+await makeAdmin();
 const PORT = process.env.PORT || 5000;
 
 // Listen on all network interfaces
