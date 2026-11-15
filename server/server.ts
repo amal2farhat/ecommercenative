@@ -46,12 +46,12 @@ app.use("/api/address",addressRouter)
 app.use('/api/admin',AdminRouter)
 
 await makeAdmin();
-const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 5000;
 
 // Listen on all network interfaces
-app.listen(PORT,  () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+// app.listen(PORT,  () => {
+//   console.log(`Server running at http://localhost:${PORT}`);
+// });
 
 
 export default app;
