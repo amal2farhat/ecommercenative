@@ -4,9 +4,12 @@ import { ScrollView, Text, View, ActivityIndicator, RefreshControl } from "react
 // import { COLORS, getStatusColor } from "@/constants";
 import { dummyAdminStats } from "@/assets/assets";
 import { COLORS,getStatusColor } from "@/assets/constants";
+import { useAuth } from "@clerk/clerk-expo";
+import api from "@/constants/api";
 
 export default function AdminDashboard() {
     const router = useRouter();
+    const {getToken}=useAuth()
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState({
@@ -16,12 +19,63 @@ export default function AdminDashboard() {
         totalRevenue: 0,
         recentOrders: []
     });
+const fetchStats = async () => {
+    try {
+        const token = await getToken();
 
-    const fetchStats = async () => {
-        setStats(dummyAdminStats as any);
+        if (!token) {
+            throw new Error("User is not authenticated");
+        }
+
+        const { data } = await api.get("/admin/stats", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (data.success && data.data) {
+            setStats({
+                totalUsers: data.data.totalUsers ?? 0,
+                totalProducts: data.data.totalProducts ?? 0,
+                totalOrders: data.data.totalOrders ?? 0,
+                totalRevenue: data.data.totalRevenue ?? 0,
+                recentOrders: Array.isArray(data.data.recentOrders)
+                    ? data.data.recentOrders
+                    : [],
+            });
+        }
+    } catch (error: any) {
+        console.log(
+            "ADMIN STATS ERROR:",
+            error.response?.data || error.message
+        );
+    } finally {
         setLoading(false);
         setRefreshing(false);
-    };
+    }
+};
+    // const fetchStats = async () => {
+    //     try {
+    //         const token=await getToken()
+    //         const {data}=await api.get('/admin/stats',{
+    //             headers:{
+    //                 Authorization:`Bearer ${token}`
+    //             }
+    //         })
+    //         if(data.success){
+    //             setStats(data.data)
+    //         }
+    //     } catch (error) {
+    //         console.error("Failed to fetch admin stats:", error)
+            
+    //     }finally{
+    //         setLoading(false)
+    //         setRefreshing(false);
+    //     }
+    //     // setStats(dummyAdminStats as any);
+    //     // setLoading(false);
+    //     // setRefreshing(false);
+    // };
 
     useEffect(() => {
         fetchStats();

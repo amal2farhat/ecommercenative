@@ -15,6 +15,14 @@ import AdminRouter from './routes/adminRoutes.js';
 dotenv.config();
 
 const app = express();
+app.get("/test", (req, res) => {
+    console.log("TEST ROUTE WORKING!");
+    res.status(200).json({
+        success: true,
+        message: "Backend is working!"
+    });
+});
+
 await connectDB()
 app.post('/api/clerk',express.raw({type:"application/json"}),clerkWebhooks)
 //mongodb+srv://amalfarah222_db_user:RA2RsM8xboRaLGM4@cluster0.6ezgplo.mongodb.net/
@@ -44,3 +52,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT,  () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
+
+export default app;

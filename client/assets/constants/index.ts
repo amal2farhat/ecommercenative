@@ -1,12 +1,9 @@
 export const COLORS = {
-
     primary: "#111111",
     secondary: "#666666",
     background: "#FFFFFF",
     surface: "#F7F7F7",
     accent: "#FF4C3B",
-    banafsajiAmal:'#8B5CF6',
-    orangAmal:'#F97316',
     border: "#EEEEEE",
     error: "#FF4444",
 };
