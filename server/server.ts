@@ -1,57 +1,131 @@
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import connectDB from './config/db.js';
-import { clerkMiddleware } from '@clerk/express'
+import { clerkMiddleware } from '@clerk/express';
 import { clerkWebhooks } from './controllers/webhooks.js';
+
+
 import makeAdmin from './scripts/makeAdmin.js';
-import ProductRouter from './routes/productRoutes.js'
+
+import ProductRouter from './routes/productRoutes.js';
 import CartRouter from './routes/cartRoutes.js';
 import OrderRouter from './routes/ordersRoutes.js';
 import addressRouter from './routes/addressRoutes.js';
 import AdminRouter from './routes/adminRoutes.js';
 
-dotenv.config();
 
 const app = express();
-app.get("/test", (req, res) => {
-    console.log("TEST ROUTE WORKING!");
+
+// CORS
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Webhook MUST be before express.json()
+app.post(
+    '/api/clerk',
+    express.raw({ type: 'application/json' }),
+    clerkWebhooks
+);
+
+// JSON middleware
+app.use(express.json());
+
+// Clerk authentication
+app.use(clerkMiddleware());
+
+// Test route
+app.get('/test', (req, res) => {
     res.status(200).json({
         success: true,
-        message: "Backend is working!"
+        message: 'Backend is working!'
     });
 });
 
-await connectDB()
-app.post('/api/clerk',express.raw({type:"application/json"}),clerkWebhooks)
-//mongodb+srv://amalfarah222_db_user:RA2RsM8xboRaLGM4@cluster0.6ezgplo.mongodb.net/
-// CORS - Allow React Native Web
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-app.use(express.json());
-app.use(clerkMiddleware());
-
 app.get('/', (req, res) => {
-  res.status(200).send('API Server is running!');
+    res.status(200).send('API Server is running!');
 });
-app.use("/api/products",ProductRouter)
-app.use("/api/cart",CartRouter)
-app.use("/api/order",OrderRouter)
-app.use("/api/address",addressRouter)
-app.use('/api/admin',AdminRouter)
 
+// Routes
+app.use('/api/products', ProductRouter);
+app.use('/api/cart', CartRouter);
+app.use('/api/order', OrderRouter);
+app.use('/api/address', addressRouter);
+app.use('/api/admin', AdminRouter);
+
+// Database connection and admin initialization
+await connectDB();
 await makeAdmin();
-// const PORT = process.env.PORT || 5000;
-
 // Listen on all network interfaces
+const PORT = process.env.PORT || 5000;
+app.listen(Number(PORT), "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
 // app.listen(PORT,  () => {
 //   console.log(`Server running at http://localhost:${PORT}`);
 // });
 
-
 export default app;
+
+// import express from 'express';
+// import cors from 'cors';
+// import dotenv from 'dotenv';
+// import connectDB from './config/db.js';
+// import { clerkMiddleware } from '@clerk/express'
+// import { clerkWebhooks } from './controllers/webhooks.js';
+// import makeAdmin from './scripts/makeAdmin.js';
+// import ProductRouter from './routes/productRoutes.js'
+// import CartRouter from './routes/cartRoutes.js';
+// import OrderRouter from './routes/ordersRoutes.js';
+// import addressRouter from './routes/addressRoutes.js';
+// import AdminRouter from './routes/adminRoutes.js';
+
+// dotenv.config();
+
+// const app = express();
+// app.get("/test", (req, res) => {
+//     console.log("TEST ROUTE WORKING!");
+//     res.status(200).json({
+//         success: true,
+//         message: "Backend is working!"
+//     });
+// });
+
+// await connectDB()
+// app.post('/api/clerk',express.raw({type:"application/json"}),clerkWebhooks)
+// //mongodb+srv://amalfarah222_db_user:RA2RsM8xboRaLGM4@cluster0.6ezgplo.mongodb.net/
+// // CORS - Allow React Native Web
+// app.use(cors({
+//   origin: '*',
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+// }));
+
+// app.use(express.json());
+// app.use(clerkMiddleware());
+
+// app.get('/', (req, res) => {
+//   res.status(200).send('API Server is running!');
+// });
+// app.use("/api/products",ProductRouter)
+// app.use("/api/cart",CartRouter)
+// app.use("/api/order",OrderRouter)
+// app.use("/api/address",addressRouter)
+// app.use('/api/admin',AdminRouter)
+
+// await makeAdmin();
+// // const PORT = process.env.PORT || 5000;
+
+// // Listen on all network interfaces
+// // app.listen(PORT,  () => {
+// //   console.log(`Server running at http://localhost:${PORT}`);
+// // });
+
+
+// export default app;

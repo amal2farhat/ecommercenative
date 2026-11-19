@@ -5,8 +5,8 @@ const connectDB = async () => {
         mongoose.connection.on('connected', () => {
             console.log('MongoDB connected');
         });
-
-        await mongoose.connect(process.env.MONGODB_URI as string);
+ await mongoose.connect("mongodb://127.0.0.1:27017/ecommercenativenew");
+        // await mongoose.connect(process.env.MONGODB_URI as string);
 
     } catch (error) {
         console.error('MongoDB connection failed:', error);

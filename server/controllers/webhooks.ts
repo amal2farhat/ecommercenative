@@ -1,4 +1,4 @@
-
+import mongoose from "mongoose";
 import { Request, Response } from "express";
 import { verifyWebhook } from "@clerk/express/webhooks";
 import User from "../models/User.js";
@@ -44,7 +44,7 @@ export const clerkWebhooks = async (req: Request, res: Response) => {
             };
 
             console.log("Saving user to MongoDB:", userData.clerkId);
-
+console.log("MongoDB connection state:", mongoose.connection.readyState);
             // Create or Update User
             const user = await User.findOneAndUpdate(
                 { clerkId: clerkUser.id },
